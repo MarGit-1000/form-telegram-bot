@@ -499,7 +499,8 @@ Kode Rahasia: ${data.kodeRahasia}
         fontSize: '0.75rem',
         padding: '2px 6px',
         cursor: 'pointer',
-        backgroundColor: '#f3f4f6',
+        background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
+        color: 'white',
         border: '1px solid #d1d5db',
         borderRadius: '4px'
       }}
