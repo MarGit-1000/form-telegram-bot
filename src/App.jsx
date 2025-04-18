@@ -449,8 +449,7 @@ Kode Rahasia: ${data.kodeRahasia}
                       padding: '0.5rem 0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '0.375rem',
-                      outline: 'none', 
-                      margin-right: '100px'
+                      outline: 'none'
                     }}
                     required
                   />
