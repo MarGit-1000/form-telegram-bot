@@ -1,0 +1,19 @@
+
+{
+  "terdaftar": [
+    {
+      "nama": "Ahmad",
+      "kelas": "12 IPA 1",
+      "jumlah": 2,
+      "total": 8000,
+      "waktu": "2024-01-20 10:00:00"
+    },
+    {
+      "nama": "Sarah",
+      "kelas": "11 IPS 2", 
+      "jumlah": 3,
+      "total": 12000,
+      "waktu": "2024-01-20 11:30:00"
+    }
+  ]
+}
