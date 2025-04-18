@@ -5,10 +5,14 @@ function App() {
   const [showButtons, setShowButtons] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [deleteCode, setDeleteCode] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const [formData, setFormData] = useState({
     nama: '',
     kelas: '',
-    jumlah: 1
+    jumlah: 1,
+    kodeRahasia: ''
   });
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,6 +28,12 @@ function App() {
 
     // Ambil data dari Firebase saat komponen dimuat
     fetchAllData();
+    
+    // Generate kode rahasia saat form dibuka
+    setFormData(prev => ({
+      ...prev,
+      kodeRahasia: generateSecretCode()
+    }));
     
     return () => clearTimeout(timer);
   }, []);
@@ -50,6 +60,11 @@ function App() {
     }
   };
 
+  // Fungsi untuk menghasilkan kode rahasia acak
+  const generateSecretCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -58,8 +73,30 @@ function App() {
     });
   };
 
+  const incrementQuantity = () => {
+    setFormData(prev => ({
+      ...prev,
+      jumlah: prev.jumlah + 1
+    }));
+  };
+
+  const decrementQuantity = () => {
+    if (formData.jumlah > 1) {
+      setFormData(prev => ({
+        ...prev,
+        jumlah: prev.jumlah - 1
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validasi nama tidak boleh kosong
+    if (!formData.nama.trim()) {
+      alert("Nama tidak boleh kosong!");
+      return;
+    }
     
     // Buat data baru
     const newData = {
@@ -93,11 +130,13 @@ function App() {
     setShowConfirmation(true);
     setShowForm(false);
     
-    // Reset form
+    // Reset form tapi simpan kode rahasia untuk ditampilkan di konfirmasi
+    const kodeRahasia = formData.kodeRahasia;
     setFormData({
       nama: '',
       kelas: '',
-      jumlah: 1
+      jumlah: 1,
+      kodeRahasia: generateSecretCode() // Generate kode baru untuk pesanan berikutnya
     });
   };
 
@@ -112,6 +151,7 @@ Kelas: ${data.kelas}
 Jumlah: ${data.jumlah}
 Total: Rp ${data.total.toLocaleString()}
 Waktu: ${data.waktu}
+Kode Rahasia: ${data.kodeRahasia}
     `;
     
     try {
@@ -127,6 +167,38 @@ Waktu: ${data.waktu}
       });
     } catch (error) {
       console.error('Error sending to Telegram:', error);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deleteCode.trim()) {
+      setDeleteError("Kode rahasia tidak boleh kosong!");
+      return;
+    }
+    
+    // Cari order dengan kode rahasia yang sesuai
+    const orderToDelete = allData.find(order => order.kodeRahasia === deleteCode);
+    
+    if (!orderToDelete) {
+      setDeleteError("Kode rahasia tidak ditemukan!");
+      return;
+    }
+    
+    try {
+      const response = await fetch(`https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders/${orderToDelete.id}.json`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        alert("Pesanan berhasil dihapus!");
+        setDeleteCode('');
+        setDeleteError('');
+        setShowDeleteForm(false);
+        fetchAllData();
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      setDeleteError("Terjadi kesalahan saat menghapus data!");
     }
   };
 
@@ -195,6 +267,42 @@ Waktu: ${data.waktu}
     
     .confirmation-modal {
       animation: bounce 0.5s ease-out;
+    }
+    
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      overflow: hidden;
+    }
+    
+    .quantity-button {
+      background-color: #f3f4f6;
+      border: none;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: #4b5563;
+      transition: background-color 0.2s;
+    }
+    
+    .quantity-button:hover {
+      background-color: #e5e7eb;
+    }
+    
+    .quantity-input {
+      width: 3rem;
+      text-align: center;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      padding: 0.5rem 0;
     }
   `;
 
@@ -265,6 +373,23 @@ Waktu: ${data.waktu}
             >
               Lihat data yang terdaftar saat ini
             </button>
+            
+            <button
+              onClick={() => setShowDeleteForm(true)}
+              style={{
+                background: 'linear-gradient(to right, #f43f5e, #ec4899)',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Hapus Pesanan
+            </button>
           </div>
         </div>
 
@@ -334,21 +459,44 @@ Waktu: ${data.waktu}
                   <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
                     Masukkan jumlah beli anda
                   </label>
-                  <input
-                    type="number"
-                    name="jumlah"
-                    value={formData.jumlah}
-                    onChange={handleChange}
-                    min="1"
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      outline: 'none'
-                    }}
-                    required
-                  />
+                  <div className="quantity-control">
+                    <button 
+                      type="button" 
+                      className="quantity-button"
+                      onClick={decrementQuantity}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      name="jumlah"
+                      value={formData.jumlah}
+                      onChange={handleChange}
+                      min="1"
+                      className="quantity-input"
+                      readOnly
+                    />
+                    <button 
+                      type="button" 
+                      className="quantity-button"
+                      onClick={incrementQuantity}
+                    >
+                      +
+                    </button>
+                  </div>
+                  
+                  <div style={{
+                    marginTop: '0.75rem',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    <p style={{fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem'}}>
+                      <span style={{fontWeight: 500}}>Kode rahasia:</span> {formData.kodeRahasia}
+                    </p>
+                    <p style={{fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic'}}>
+                      *Ingatlah code ini, code ini akan di minta saat anda mencoba menghapus data anda
+                    </p>
+                  </div>
                 </div>
                 
                 <div style={{
@@ -379,6 +527,83 @@ Waktu: ${data.waktu}
                   Kirim
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Form Modal */}
+        {showDeleteForm && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
+                <h2 style={{fontSize: '1.25rem', fontWeight: 600, color: '#1f2937'}}>
+                  Hapus Pesanan
+                </h2>
+                <button 
+                  onClick={() => {
+                    setShowDeleteForm(false);
+                    setDeleteCode('');
+                    setDeleteError('');
+                  }}
+                  style={{color: '#6b7280', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer'}}
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div>
+                <div style={{marginBottom: '1rem'}}>
+                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
+                    Masukkan kode rahasia pesanan
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteCode}
+                    onChange={(e) => setDeleteCode(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                {deleteError && (
+                  <div style={{
+                    marginBottom: '1rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#fee2e2',
+                    color: '#b91c1c',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem'
+                  }}>
+                    {deleteError}
+                  </div>
+                )}
+                
+                <button
+                  onClick={handleDeleteOrder}
+                  style={{
+                    width: '100%',
+                    background: 'linear-gradient(to right, #ef4444, #dc2626)',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500
+                  }}
+                >
+                  Hapus Pesanan
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -473,6 +698,34 @@ Waktu: ${data.waktu}
                 Belum ada data yang terdaftar.
               </p>
             )}
+            
+            {/* Tombol Hubungi Admin */}
+            <div style={{
+              marginTop: '1.5rem',
+              textAlign: 'center'
+            }}>
+              <a 
+                href="https://wa.me/+6281234567890" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: '#25D366',
+                  color: 'white',
+                  textDecoration: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.375rem',
+                  fontWeight: 500
+                }}
+              >
+                <svg style={{width: '1.25rem', height: '1.25rem'}} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Hubungi Admin lewat WA
+              </a>
+            </div>
           </div>
         )}
       </div>
