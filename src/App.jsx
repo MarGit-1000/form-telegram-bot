@@ -425,7 +425,7 @@ Kode Rahasia: ${data.kodeRahasia}
                     value={formData.nama}
                     onChange={handleChange}
                     style={{
-                      width: '90%',
+                      width: '100%',
                       padding: '0.5rem 0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '0.375rem',
