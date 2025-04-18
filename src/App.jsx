@@ -416,7 +416,10 @@ Kode Rahasia: ${data.kodeRahasia}
               
               <form onSubmit={handleSubmit}>
                 <div style={{marginBottom: '1rem'}}>
-                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
+                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem', max-width: 100%; /* Membatasi lebar input agar tidak melebihi kotak */
+  overflow: hidden; /* Menyembunyikan teks yang terlalu panjang */
+  white-space: nowrap; /* Mencegah teks pindah baris */
+  text-overflow: ellipsis;}}>
                     Masukkan nama anda
                   </label>
                   <input
