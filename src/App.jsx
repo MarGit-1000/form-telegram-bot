@@ -486,17 +486,31 @@ Kode Rahasia: ${data.kodeRahasia}
                   </div>
                   
                   <div style={{
-                    marginTop: '0.75rem',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}>
-                    <p style={{fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem'}}>
-                      <span style={{fontWeight: 500}}>Kode rahasia:</span> {formData.kodeRahasia}
-                    </p>
-                    <p style={{fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic'}}>
-                      *Ingatlah code ini, code ini akan di minta saat anda mencoba menghapus data anda
-                    </p>
-                  </div>
+  marginTop: '0.75rem',
+  display: 'flex',
+  flexDirection: 'column'
+}}>
+  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+    <span style={{ fontWeight: 500 }}>Kode rahasia:</span> {formData.kodeRahasia}
+    <button
+      onClick={() => navigator.clipboard.writeText(formData.kodeRahasia)}
+      style={{
+        marginLeft: '8px',
+        fontSize: '0.75rem',
+        padding: '2px 6px',
+        cursor: 'pointer',
+        backgroundColor: '#f3f4f6',
+        border: '1px solid #d1d5db',
+        borderRadius: '4px'
+      }}
+    >
+      Salin
+    </button>
+  </p>
+  <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic' }}>
+    *Ingatlah code ini, code ini akan diminta saat anda mencoba menghapus data anda
+  </p>
+</div>
                 </div>
                 
                 <div style={{
