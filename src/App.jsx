@@ -141,10 +141,10 @@ function App() {
   };
 
   const sendToTelegram = async (data) => {
-    const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio'; // Ganti dengan token bot Anda dari BotFather
-    const CHAT_ID = '1469657127';     // Ganti dengan chat ID Anda
-    
-    const message = `
+  const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio';
+  const CHAT_ID = '1469657127';
+
+  const message = `
 📝 PESANAN BARU 📝
 Nama: ${data.nama}
 Kelas: ${data.kelas}
@@ -152,23 +152,43 @@ Jumlah: ${data.jumlah}
 Total: Rp ${data.total.toLocaleString()}
 Waktu: ${data.waktu}
 Kode Rahasia: ${data.kodeRahasia}
-    `;
-    
-    try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: message
-        })
-      });
-    } catch (error) {
-      console.error('Error sending to Telegram:', error);
-    }
-  };
+  `;
+
+  try {
+    // Kirim pesan pertama
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message
+      })
+    });
+
+    // Ambil daftar semua pesanan dari Firebase
+    const response = await fetch('https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
+    const orders = await response.json();
+
+    // Ubah objek jadi array dan format jadi teks
+    let daftarPesanan = '📦 DAFTAR SEMUA PESANAN:\n\n';
+    Object.entries(orders || {}).forEach(([key, order], index) => {
+      daftarPesanan += `${index + 1}. ${order.nama} - ${order.kelas} - ${order.jumlah} pcs - Rp ${order.total.toLocaleString()}\n`;
+    });
+
+    // Kirim daftar pesanan ke Telegram
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: daftarPesanan
+      })
+    });
+
+  } catch (error) {
+    console.error('Error sending to Telegram:', error);
+  }
+};
 
   const handleDeleteOrder = async () => {
     if (!deleteCode.trim()) {
