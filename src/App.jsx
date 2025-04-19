@@ -435,25 +435,60 @@ Kode Rahasia: ${data.kodeRahasia}
                   />
                 </div>
                 
-                <div style={{marginBottom: '1rem'}}>
-                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
-                    Masukkan kelas anda
-                  </label>
-                  <input
-                    type="text"
-                    name="kelas"
-                    value={formData.kelas}
-                    onChange={handleChange}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      outline: 'none'
-                    }}
-                    required
-                  />
-                </div>
+                <div style={{ marginBottom: '1rem' }}>
+  <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
+    Kelas
+  </label>
+  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+    <select
+      value={formData.kelas.slice(0, 1)} // ambil angka dari kelas
+      onChange={(e) => {
+        const huruf = formData.kelas.slice(1) || '';
+        setFormData(prev => ({ ...prev, kelas: e.target.value + huruf }));
+      }}
+      style={{
+        flex: 1,
+        padding: '0.5rem 0.75rem',
+        border: '1px solid #d1d5db',
+        borderRadius: '0.375rem',
+        outline: 'none'
+      }}
+      required
+    >
+      <option value="">Kelas</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+    </select>
+
+    <select
+      value={formData.kelas.slice(1)} // ambil huruf dari kelas
+      onChange={(e) => {
+        const angka = formData.kelas.slice(0, 1) || '';
+        setFormData(prev => ({ ...prev, kelas: angka + e.target.value }));
+      }}
+      style={{
+        flex: 1,
+        padding: '0.5rem 0.75rem',
+        border: '1px solid #d1d5db',
+        borderRadius: '0.375rem',
+        outline: 'none'
+      }}
+      required
+    >
+      <option value="">Huruf</option>
+      {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(huruf => (
+        <option key={huruf} value={huruf}>{huruf}</option>
+      ))}
+    </select>
+  </div>
+
+  {formData.kelas.length === 2 && (
+    <p style={{ color: '#6b7280' }}>
+      Kelas anda {formData.kelas}
+    </p>
+  )}
+</div>
                 
                 <div style={{marginBottom: '1.5rem'}}>
                   <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
