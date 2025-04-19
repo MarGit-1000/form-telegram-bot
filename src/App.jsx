@@ -139,6 +139,27 @@ function App() {
       kodeRahasia: generateSecretCode() // Generate kode baru untuk pesanan berikutnya
     });
   };
+   
+  const sendTelegramLog = async (message) => {
+  const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio';
+  const CHAT_ID = '1469657127';
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message
+      })
+    });
+  } catch (error) {
+    console.error('Gagal kirim log ke Telegram:', error);
+  }
+};
 
   const sendToTelegram = async (data) => {
   const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio';
@@ -210,12 +231,16 @@ Kode Rahasia: ${data.kodeRahasia}
       });
       
       if (response.ok) {
-        alert("Pesanan berhasil dihapus!");
-        setDeleteCode('');
-        setDeleteError('');
-        setShowDeleteForm(false);
-        fetchAllData();
-      }
+  alert("Pesanan berhasil dihapus!");
+  
+  // Kirim log ke Telegram
+  sendTelegramLog(`Pesanan dengan ID: ${orderToDelete.id} telah dihapus. Kode rahasia: ${deleteCode}`);
+
+  setDeleteCode('');
+  setDeleteError('');
+  setShowDeleteForm(false);
+  fetchAllData();
+}
     } catch (error) {
       console.error('Error deleting order:', error);
       setDeleteError("Terjadi kesalahan saat menghapus data!");
