@@ -415,168 +415,192 @@ Kode Rahasia: ${data.kodeRahasia}
               </div>
               
               <form onSubmit={handleSubmit}>
-                <div style={{marginBottom: '1rem'}}>
-                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
-                    Masukkan nama anda
-                  </label>
-                  <input
-                    type="text"
-                    name="nama"
-                    value={formData.nama}
-                    onChange={handleChange}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      outline: 'none'
-                    }}
-                    required
-                  />
-                </div>
-                
-                <div style={{ marginBottom: '1rem' }}>
-  <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
-    Kelas
-  </label>
-  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-    <select
-      value={formData.kelas.slice(0, 1)} // ambil angka dari kelas
-      onChange={(e) => {
-        const huruf = formData.kelas.slice(1) || '';
-        setFormData(prev => ({ ...prev, kelas: e.target.value + huruf }));
-      }}
+  {/* NAMA */}
+  <div style={{ marginBottom: '1rem' }}>
+    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
+      Masukkan nama anda
+    </label>
+    <input
+      type="text"
+      name="nama"
+      value={formData.nama}
+      onChange={handleChange}
       style={{
-        flex: 1,
+        width: '100%',
         padding: '0.5rem 0.75rem',
         border: '1px solid #d1d5db',
         borderRadius: '0.375rem',
         outline: 'none'
       }}
       required
-    >
-      <option value="">Kelas</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-    </select>
-
-    <select
-      value={formData.kelas.slice(1)} // ambil huruf dari kelas
-      onChange={(e) => {
-        const angka = formData.kelas.slice(0, 1) || '';
-        setFormData(prev => ({ ...prev, kelas: angka + e.target.value }));
-      }}
-      style={{
-        flex: 1,
-        padding: '0.5rem 0.75rem',
-        border: '1px solid #d1d5db',
-        borderRadius: '0.375rem',
-        outline: 'none'
-      }}
-      required
-    >
-      <option value="">Huruf</option>
-      {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(huruf => (
-        <option key={huruf} value={huruf}>{huruf}</option>
-      ))}
-    </select>
+    />
   </div>
 
-  {formData.kelas.length === 2 && (
-    <p style={{ color: '#6b7280' }}>
-      Kelas anda {formData.kelas}
+  {/* KELAS */}
+  <div style={{ marginBottom: '1rem' }}>
+    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
+      Kelas
+    </label>
+    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      <select
+        value={formData.kelas.slice(0, 1)}
+        onChange={(e) => {
+          const huruf = formData.kelas.slice(1) || '';
+          setFormData(prev => ({ ...prev, kelas: e.target.value + huruf }));
+        }}
+        style={{
+          flex: 1,
+          padding: '0.5rem 0.75rem',
+          border: '1px solid #d1d5db',
+          borderRadius: '0.375rem',
+          outline: 'none',
+          backgroundColor: 'white'
+        }}
+        required
+      >
+        <option value="">Kelas</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+      </select>
+
+      <select
+        value={formData.kelas.slice(1)}
+        onChange={(e) => {
+          const angka = formData.kelas.slice(0, 1) || '';
+          setFormData(prev => ({ ...prev, kelas: angka + e.target.value }));
+        }}
+        style={{
+          flex: 1,
+          padding: '0.5rem 0.75rem',
+          border: '1px solid #d1d5db',
+          borderRadius: '0.375rem',
+          outline: 'none',
+          backgroundColor: 'white'
+        }}
+        required
+      >
+        <option value="">Huruf</option>
+        {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(huruf => (
+          <option key={huruf} value={huruf}>{huruf}</option>
+        ))}
+      </select>
+    </div>
+
+    {formData.kelas.length === 2 && (
+      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+        Kelas anda {formData.kelas}
+      </p>
+    )}
+  </div>
+
+  {/* JUMLAH BELI */}
+  <div style={{ marginBottom: '1.5rem' }}>
+    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
+      Masukkan jumlah beli anda
+    </label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <button
+        type="button"
+        onClick={decrementQuantity}
+        style={{
+          padding: '0.5rem',
+          backgroundColor: '#ede9fe',
+          border: '1px solid #d1d5db',
+          borderRadius: '0.375rem',
+          cursor: 'pointer'
+        }}
+      >
+        -
+      </button>
+      <input
+        type="number"
+        name="jumlah"
+        value={formData.jumlah}
+        onChange={handleChange}
+        min="1"
+        readOnly
+        style={{
+          width: '3rem',
+          textAlign: 'center',
+          padding: '0.5rem',
+          border: '1px solid #d1d5db',
+          borderRadius: '0.375rem',
+          backgroundColor: '#f9fafb'
+        }}
+      />
+      <button
+        type="button"
+        onClick={incrementQuantity}
+        style={{
+          padding: '0.5rem',
+          backgroundColor: '#ede9fe',
+          border: '1px solid #d1d5db',
+          borderRadius: '0.375rem',
+          cursor: 'pointer'
+        }}
+      >
+        +
+      </button>
+    </div>
+
+    {/* KODE RAHASIA */}
+    <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column' }}>
+      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+        <span style={{ fontWeight: 500 }}>Kode rahasia:</span> {formData.kodeRahasia}
+        <button
+          onClick={() => navigator.clipboard.writeText(formData.kodeRahasia)}
+          type="button"
+          style={{
+            marginLeft: '8px',
+            fontSize: '0.75rem',
+            padding: '2px 6px',
+            cursor: 'pointer',
+            background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          Salin
+        </button>
+      </p>
+      <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic' }}>
+        *Ingatlah kode ini. Kode ini akan diminta saat anda mencoba menghapus data anda.
+      </p>
+    </div>
+  </div>
+
+  {/* TOTAL */}
+  <div style={{
+    marginBottom: '1.5rem',
+    padding: '0.75rem',
+    backgroundColor: '#f5f3ff',
+    borderRadius: '0.375rem'
+  }}>
+    <p style={{ fontWeight: 500 }}>
+      Total yang harus anda bayar =
+      <span style={{ color: '#6d28d9', fontWeight: 700 }}> Rp {(formData.jumlah * hargaSatuan).toLocaleString()}</span>
     </p>
-  )}
-</div>
-                
-                <div style={{marginBottom: '1.5rem'}}>
-                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
-                    Masukkan jumlah beli anda
-                  </label>
-                  <div className="quantity-control">
-                    <button 
-                      type="button" 
-                      className="quantity-button"
-                      onClick={decrementQuantity}
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      name="jumlah"
-                      value={formData.jumlah}
-                      onChange={handleChange}
-                      min="1"
-                      className="quantity-input"
-                      readOnly
-                    />
-                    <button 
-                      type="button" 
-                      className="quantity-button"
-                      onClick={incrementQuantity}
-                    >
-                      +
-                    </button>
-                  </div>
-                  
-                  <div style={{
-  marginTop: '0.75rem',
-  display: 'flex',
-  flexDirection: 'column'
-}}>
-  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-    <span style={{ fontWeight: 500 }}>Kode rahasia:</span> {formData.kodeRahasia}
-    <button
-      onClick={() => navigator.clipboard.writeText(formData.kodeRahasia)}
-      style={{
-        marginLeft: '8px',
-        fontSize: '0.75rem',
-        padding: '2px 6px',
-        cursor: 'pointer',
-        background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
-        color: 'white',
-        border: '1px solid #d1d5db',
-        borderRadius: '4px'
-      }}
-    >
-      Salin
-    </button>
-  </p>
-  <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic' }}>
-    *Ingatlah code ini, code ini akan diminta saat anda mencoba menghapus data anda
-  </p>
-</div>
-                </div>
-                
-                <div style={{
-                  marginBottom: '1.5rem', 
-                  padding: '0.75rem', 
-                  backgroundColor: '#f5f3ff', 
-                  borderRadius: '0.375rem'
-                }}>
-                  <p style={{fontWeight: 500}}>
-                    Total yang harus anda bayar = 
-                    <span style={{color: '#6d28d9', fontWeight: 700}}> Rp {(formData.jumlah * hargaSatuan).toLocaleString()}</span>
-                  </p>
-                </div>
-                
-                <button
-                  type="submit"
-                  style={{
-                    width: '100%',
-                    background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 500
-                  }}
-                >
-                  Kirim
-                </button>
-              </form>
+  </div>
+
+  {/* SUBMIT */}
+  <button
+    type="submit"
+    style={{
+      width: '100%',
+      background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
+      color: 'white',
+      padding: '0.5rem 1rem',
+      borderRadius: '0.375rem',
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: 500
+    }}
+  >
+    Kirim
+  </button>
+</form>
             </div>
           </div>
         )}
