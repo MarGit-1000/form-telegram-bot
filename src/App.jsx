@@ -1,855 +1,384 @@
 import React, { useState, useEffect } from 'react';
 
-// Komponen utama
-function App() {
-  const [showButtons, setShowButtons] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showDeleteForm, setShowDeleteForm] = useState(false);
-  const [deleteCode, setDeleteCode] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [formData, setFormData] = useState({
-    nama: '',
-    kelas: '',
-    jumlah: 1,
-    kodeRahasia: ''
-  });
-  const [allData, setAllData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showData, setShowData] = useState(false);
-  
-  const hargaSatuan = 4000;
+export default function HealthNewsWebsite() {
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaCode, setCaptchaCode] = useState('');
+  const [userInput, setUserInput] = useState('');
+  const [error, setError] = useState('');
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
 
+  // Generate random captcha code when modal opens
   useEffect(() => {
-    // Animasi untuk memunculkan tombol setelah halaman dimuat
-    const timer = setTimeout(() => {
-      setShowButtons(true);
-    }, 1000);
-
-    // Ambil data dari Firebase saat komponen dimuat
-    fetchAllData();
-    
-    // Generate kode rahasia saat form dibuka
-    setFormData(prev => ({
-      ...prev,
-      kodeRahasia: generateSecretCode()
-    }));
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Fungsi untuk mengambil semua data dari Firebase
-  const fetchAllData = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
-      const data = await response.json();
-      
-      if (data) {
-        // Konversi dari object ke array
-        const ordersArray = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        setAllData(ordersArray);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+    if (showCaptcha) {
+      generateCaptchaCode();
     }
+  }, [showCaptcha]);
+
+  const generateCaptchaCode = () => {
+    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setCaptchaCode(randomCode);
+    setUserInput('');
+    setError('');
   };
 
-  // Fungsi untuk menghasilkan kode rahasia acak
-  const generateSecretCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === 'jumlah' ? parseInt(value) || 0 : value
-    });
-  };
-
-  const incrementQuantity = () => {
-    setFormData(prev => ({
-      ...prev,
-      jumlah: prev.jumlah + 1
-    }));
-  };
-
-  const decrementQuantity = () => {
-    if (formData.jumlah > 1) {
-      setFormData(prev => ({
-        ...prev,
-        jumlah: prev.jumlah - 1
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validasi nama tidak boleh kosong
-    if (!formData.nama.trim()) {
-      alert("Nama tidak boleh kosong!");
+  const verifyCaptcha = () => {
+    // Secret code check
+    if (userInput === '0107387129') {
+      setShowSecret(true);
+      setShowCaptcha(false);
       return;
     }
-    
-    // Buat data baru
-    const newData = {
-      ...formData,
-      total: formData.jumlah * hargaSatuan,
-      waktu: new Date().toLocaleString()
-    };
-    
-    // Kirim data ke Firebase
-    try {
-      const response = await fetch('https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newData)
-      });
-      
-      if (response.ok) {
-        // Refresh data setelah berhasil menambahkan
-        fetchAllData();
-      }
-    } catch (error) {
-      console.error('Error saving data:', error);
-    }
-    
-    // Kirim data ke bot Telegram
-    sendToTelegram(newData);
-    
-    // Tampilkan konfirmasi
-    setShowConfirmation(true);
-    setShowForm(false);
-    
-    // Reset form tapi simpan kode rahasia untuk ditampilkan di konfirmasi
-    const kodeRahasia = formData.kodeRahasia;
-    setFormData({
-      nama: '',
-      kelas: '',
-      jumlah: 1,
-      kodeRahasia: generateSecretCode() // Generate kode baru untuk pesanan berikutnya
-    });
-  };
-   
-  const sendTelegramLog = async (message) => {
-  const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio';
-  const CHAT_ID = '1469657127';
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message
-      })
-    });
-  } catch (error) {
-    console.error('Gagal kirim log ke Telegram:', error);
+    // Normal captcha verification
+    if (userInput === captchaCode) {
+      setRedirectUrl('https://www.kompas.com');
+      setShouldRedirect(true);
+    } else {
+      setError('Kode CAPTCHA salah. Coba lagi.');
+    }
+  };
+
+  // Handle contact button click
+  const handleContactClick = () => {
+    setShowCaptcha(true);
+    generateCaptchaCode();
+  };
+
+  if (shouldRedirect) {
+    window.location.href = redirectUrl;
+    return null;
   }
-};
-
-  const sendToTelegram = async (data) => {
-  const BOT_TOKEN = '8053296747:AAETgS_3c_-EOdVkNNWdsGaadKQMW1Wxzio';
-  const CHAT_ID = '1469657127';
-
-  const message = `
-📝 PESANAN BARU 📝
-Nama: ${data.nama}
-Kelas: ${data.kelas}
-Jumlah: ${data.jumlah}
-Total: Rp ${data.total.toLocaleString()}
-Waktu: ${data.waktu}
-Kode Rahasia: ${data.kodeRahasia}
-  `;
-
-  try {
-    // Kirim pesan pertama
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message
-      })
-    });
-
-    // Ambil daftar semua pesanan dari Firebase
-    const response = await fetch('https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
-    const orders = await response.json();
-
-    // Ubah objek jadi array dan format jadi teks
-    let daftarPesanan = '📦 DAFTAR SEMUA PESANAN:\n\n';
-    Object.entries(orders || {}).forEach(([key, order], index) => {
-      daftarPesanan += `${index + 1}. ${order.nama} - ${order.kelas} - ${order.jumlah} pcs - Rp ${order.total.toLocaleString()}\n`;
-    });
-
-    // Kirim daftar pesanan ke Telegram
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: daftarPesanan
-      })
-    });
-
-  } catch (error) {
-    console.error('Error sending to Telegram:', error);
-  }
-};
-
-  const handleDeleteOrder = async () => {
-    if (!deleteCode.trim()) {
-      setDeleteError("Kode rahasia tidak boleh kosong!");
-      return;
-    }
-    
-    // Cari order dengan kode rahasia yang sesuai
-    const orderToDelete = allData.find(order => order.kodeRahasia === deleteCode);
-    
-    if (!orderToDelete) {
-      setDeleteError("Kode rahasia tidak ditemukan!");
-      return;
-    }
-    
-    try {
-      const response = await fetch(`https://form-telegram-app-default-rtdb.asia-southeast1.firebasedatabase.app/orders/${orderToDelete.id}.json`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-  alert("Pesanan berhasil dihapus!");
-  
-  // Kirim log ke Telegram
-  sendTelegramLog(`Pesanan dengan ID: ${orderToDelete.id} telah dihapus. Kode rahasia: ${deleteCode}`);
-
-  setDeleteCode('');
-  setDeleteError('');
-  setShowDeleteForm(false);
-  fetchAllData();
-}
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      setDeleteError("Terjadi kesalahan saat menghapus data!");
-    }
-  };
-
-  const closeConfirmation = () => {
-    setShowConfirmation(false);
-  };
-
-  // Styles untuk animasi
-  const fadeIn = {
-    animation: 'fadeIn 0.3s ease-out forwards'
-  };
-  
-  const slideIn = {
-    animation: 'slideIn 0.4s ease-out forwards'
-  };
-  
-  const bounce = {
-    animation: 'bounce 0.5s ease-out'
-  };
-
-  // CSS untuk animasi
-  const animationCSS = `
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    @keyframes slideIn {
-      from { 
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to { 
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    @keyframes bounce {
-      0% { transform: scale(0.8); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 50;
-      animation: fadeIn 0.3s ease-out;
-    }
-    
-    .modal-content {
-      background-color: white;
-      border-radius: 0.5rem;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      animation: slideIn 0.4s ease-out;
-    }
-    
-    .confirmation-modal {
-      animation: bounce 0.5s ease-out;
-    }
-    
-    .quantity-control {
-      display: flex;
-      align-items: center;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      overflow: hidden;
-    }
-    
-    .quantity-button {
-      background-color: #f3f4f6;
-      border: none;
-      width: 2.5rem;
-      height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      font-weight: bold;
-      cursor: pointer;
-      color: #4b5563;
-      transition: background-color 0.2s;
-    }
-    
-    .quantity-button:hover {
-      background-color: #e5e7eb;
-    }
-    
-    .quantity-input {
-      width: 3rem;
-      text-align: center;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-      padding: 0.5rem 0;
-    }
-  `;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem'
-    }}>
-      {/* Tambahkan style untuk animasi */}
-      <style>{animationCSS}</style>
-      
-      <div style={{width: '100%', maxWidth: '500px'}}>
-        <h1 style={{
-          fontSize: '1.8rem',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          marginBottom: '1.5rem',
-          color: '#6b46c1'
-        }}>
-          Formulir Pemesanan
-        </h1>
-        
-        {/* Animasi Tombol */}
-        <div style={{
-          transition: 'all 1s ease',
-          opacity: showButtons ? 1 : 0,
-          transform: showButtons ? 'translateY(0)' : 'translateY(20px)'
-        }}>
-          <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-            <button
-              onClick={() => setShowForm(true)}
-              style={{
-                background: 'linear-gradient(to right, #8b5cf6, #6366f1)',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Click di sini untuk membeli
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-blue-600 text-white shadow-lg">
+        <div className="container mx-auto py-4 px-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <img src="/api/placeholder/120/60" alt="Health News Logo" className="h-12 mr-3" />
+              <h1 className="text-2xl font-bold">HEALTH NEWS</h1>
+            </div>
+            <nav className="hidden md:block">
+              <ul className="flex space-x-6">
+                <li className="hover:underline cursor-pointer">Beranda</li>
+                <li className="hover:underline cursor-pointer">Kesehatan</li>
+                <li className="hover:underline cursor-pointer">Nutrisi</li>
+                <li className="hover:underline cursor-pointer">Gaya Hidup</li>
+                <li className="hover:underline cursor-pointer">Tentang Kami</li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto py-8 px-6">
+        <article className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+          <h1 className="text-3xl font-bold mb-4">Bahaya Terlalu Banyak Makan Gula Bagi Kesehatan</h1>
+          <div className="text-gray-600 mb-4 flex items-center">
+            <span className="mr-4">21 April 2025</span>
+            <span>Oleh: Tim Redaksi Health News</span>
+          </div>
+
+          <img 
+            src="/api/placeholder/800/400" 
+            alt="Gula dan Kesehatan" 
+            className="w-full h-64 object-cover mb-6 rounded"
+          />
+
+          <div className="prose max-w-none">
+            <p className="mb-4 text-lg">
+              Konsumsi gula telah menjadi bagian yang tidak terpisahkan dari pola makan modern. 
+              Meskipun memberikan rasa manis yang menyenangkan, konsumsi gula berlebihan dapat 
+              menimbulkan berbagai masalah kesehatan serius. Artikel ini akan membahas bahaya 
+              konsumsi gula berlebihan dan bagaimana hal itu dapat mempengaruhi kesehatan Anda.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">Apa itu Gula dan Bentuknya dalam Makanan</h2>
             
-            <button
-              onClick={() => {
-                setShowData(!showData);
-                if (!showData) fetchAllData();
-              }}
-              style={{
-                background: 'linear-gradient(to right, #2dd4bf, #0ea5e9)',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Lihat data yang terdaftar saat ini
-            </button>
+            <p className="mb-4">
+              Gula adalah karbohidrat sederhana yang terdiri dari molekul glukosa dan fruktosa. 
+              Gula dapat ditemukan secara alami dalam buah-buahan, sayuran, dan produk susu, 
+              atau ditambahkan selama proses pengolahan makanan. Bentuk gula tambahan yang umum 
+              termasuk sukrosa (gula meja), sirup jagung tinggi fruktosa, gula tebu, dan madu.
+            </p>
             
+            <p className="mb-4">
+              Menurut World Health Organization (WHO), konsumsi gula sebaiknya dibatasi hingga 
+              kurang dari 10% dari total asupan kalori harian, atau idenya sekitar 25 gram 
+              (sekitar 6 sendok teh) untuk orang dewasa. Namun, rata-rata orang saat ini 
+              mengonsumsi jauh lebih banyak dari batas yang direkomendasikan.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">Dampak Kesehatan dari Konsumsi Gula Berlebihan</h2>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">1. Obesitas dan Kenaikan Berat Badan</h3>
+            
+            <p className="mb-4">
+              Gula mengandung kalori tinggi namun rendah nutrisi esensial, yang dapat menyebabkan 
+              penambahan berat badan dan obesitas jika dikonsumsi berlebihan. Minuman manis seperti 
+              soda dan jus kemasan merupakan sumber gula tambahan terbesar dalam diet modern. 
+              Sebuah penelitian menunjukkan bahwa minum satu kaleng soda per hari dapat 
+              meningkatkan risiko obesitas hingga 60%.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">2. Diabetes Tipe 2</h3>
+            
+            <p className="mb-4">
+              Konsumsi gula berlebihan dalam jangka panjang dapat menyebabkan resistensi insulin, 
+              di mana sel-sel tubuh menjadi kurang responsif terhadap insulin. Insulin adalah 
+              hormon yang membantu mengatur kadar gula darah. Ketika tubuh menjadi resisten 
+              terhadap insulin, kadar gula darah meningkat, yang dapat menyebabkan diabetes tipe 2.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">3. Penyakit Jantung</h3>
+            
+            <p className="mb-4">
+              Diet tinggi gula dapat meningkatkan risiko penyakit jantung dengan berbagai cara. 
+              Studi terbaru menunjukkan bahwa konsumsi gula tambahan yang tinggi dapat meningkatkan 
+              trigliserida, menurunkan kolesterol HDL (kolesterol "baik"), dan meningkatkan 
+              peradangan, yang semuanya merupakan faktor risiko penyakit jantung.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">4. Penyakit Hati Berlemak Non-alkoholik</h3>
+            
+            <p className="mb-4">
+              Konsumsi fruktosa berlebihan (jenis gula yang ditemukan di banyak makanan olahan) 
+              dapat menyebabkan penumpukan lemak di hati. Kondisi ini dikenal sebagai penyakit 
+              hati berlemak non-alkoholik dan dapat berkembang menjadi peradangan hati, fibrosis, 
+              dan bahkan sirosis pada kasus yang parah.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">5. Kerusakan Gigi</h3>
+            
+            <p className="mb-4">
+              Bakteri di mulut menggunakan gula sebagai sumber energi dan menghasilkan asam yang 
+              dapat merusak enamel gigi, menyebabkan karies gigi. Minuman manis seperti soda dan 
+              jus buah sangat berbahaya karena membuat gigi terus-menerus terpapar gula.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">6. Penuaan Dini dan Kerusakan Kulit</h3>
+            
+            <p className="mb-4">
+              Konsumsi gula berlebihan dapat mempercepat proses penuaan kulit melalui proses yang 
+              disebut glikasi. Dalam proses ini, gula berikatan dengan protein dalam kulit 
+              (terutama kolagen dan elastin), merusaknya dan menyebabkan keriput dan elastisitas 
+              kulit berkurang.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">7. Dampak pada Kesehatan Mental</h3>
+            
+            <p className="mb-4">
+              Beberapa penelitian menunjukkan hubungan antara konsumsi gula tinggi dan risiko 
+              depresi serta gangguan mood lainnya. Fluktuasi kadar gula darah dapat mempengaruhi 
+              hormon dan neurotransmiter yang mengatur suasana hati, menyebabkan perubahan energi 
+              dan perasaan yang drastis.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">8. Inflamasi Kronis</h3>
+            
+            <p className="mb-4">
+              Gula dapat memicu peradangan di seluruh tubuh, yang meningkatkan risiko berbagai 
+              penyakit kronis seperti penyakit jantung, diabetes, artritis, dan bahkan beberapa 
+              jenis kanker. Peradangan kronis juga dikaitkan dengan penuaan dini dan penurunan 
+              fungsi kognitif.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">Cara Mengurangi Konsumsi Gula</h2>
+
+            <p className="mb-4">
+              Mengurangi konsumsi gula bisa jadi tantangan, terutama karena gula hadir dalam banyak 
+              makanan olahan, bahkan yang tidak terasa manis. Namun, beberapa langkah berikut dapat 
+              membantu:
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">1. Membaca Label Nutrisi</h3>
+            
+            <p className="mb-4">
+              Perhatikan kandungan gula dalam produk yang Anda beli. Gula sering tersembunyi dalam 
+              nama lain seperti sukrosa, maltosa, dekstrosa, sirup jagung tinggi fruktosa, dan molase.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">2. Ganti Minuman Manis</h3>
+            
+            <p className="mb-4">
+              Ganti soda, jus buah kemasan, dan minuman manis lainnya dengan air putih, teh tanpa gula, 
+              atau air dengan perasan lemon atau jeruk nipis.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">3. Kurangi Secara Bertahap</h3>
+            
+            <p className="mb-4">
+              Mengurangi gula secara bertahap dapat membantu lidah Anda beradaptasi dengan makanan 
+              yang kurang manis. Misalnya, jika biasanya Anda menggunakan dua sendok gula dalam kopi, 
+              cobalah menguranginya menjadi satu setengah sendok selama seminggu, kemudian satu sendok, 
+              dan seterusnya.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">4. Pilih Sumber Gula Alami</h3>
+            
+            <p className="mb-4">
+              Jika Anda menginginkan makanan manis, pilihlah buah-buahan utuh sebagai alternatif 
+              makanan penutup atau camilan. Buah mengandung serat yang membantu memperlambat penyerapan 
+              gula ke dalam darah.
+            </p>
+
+            <h3 className="text-xl font-semibold mt-6 mb-3">5. Masak di Rumah</h3>
+            
+            <p className="mb-4">
+              Dengan memasak sendiri, Anda dapat mengontrol jumlah gula yang ditambahkan ke makanan. 
+              Eksperimen dengan rempah-rempah seperti kayu manis, vanila, atau pala untuk menambah rasa 
+              tanpa menggunakan gula.
+            </p>
+
+            <h2 className="text-2xl font-bold mt-8 mb-4">Kesimpulan</h2>
+            
+            <p className="mb-4">
+              Meskipun gula memberikan kenikmatan saat dikonsumsi, dampak negatifnya pada kesehatan 
+              tidak bisa diabaikan. Dengan menyadari bahaya konsumsi gula berlebihan dan mengambil 
+              langkah-langkah untuk menguranginya, Anda dapat meningkatkan kesehatan jangka panjang 
+              dan mencegah berbagai penyakit kronis.
+            </p>
+            
+            <p className="mb-4">
+              Ingatlah bahwa mengubah kebiasaan makan tidak selalu mudah dan membutuhkan waktu. Mulailah 
+              dengan langkah kecil dan tingkatkan secara bertahap untuk hasil yang berkelanjutan. Konsultasikan 
+              dengan profesional kesehatan atau ahli gizi untuk saran yang lebih spesifik sesuai dengan 
+              kebutuhan kesehatan Anda.
+            </p>
+          </div>
+        </article>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 mt-12 py-8">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-wrap">
+            <div className="w-full md:w-1/3 mb-6 md:mb-0">
+              <h3 className="text-xl font-bold mb-4">Tentang Health News</h3>
+              <p className="text-gray-600">
+                Health News adalah sumber terpercaya untuk informasi kesehatan terkini dan 
+                berbasis bukti ilmiah. Kami berkomitmen untuk memberikan konten yang akurat 
+                dan bermanfaat untuk meningkatkan kesehatan dan kesejahteraan pembaca kami.
+              </p>
+            </div>
+            <div className="w-full md:w-1/3 mb-6 md:mb-0">
+              <h3 className="text-xl font-bold mb-4">Kategori</h3>
+              <ul className="text-gray-600">
+                <li className="mb-2 hover:text-blue-600 cursor-pointer">Nutrisi</li>
+                <li className="mb-2 hover:text-blue-600 cursor-pointer">Penyakit</li>
+                <li className="mb-2 hover:text-blue-600 cursor-pointer">Kebugaran</li>
+                <li className="mb-2 hover:text-blue-600 cursor-pointer">Kesehatan Mental</li>
+                <li className="mb-2 hover:text-blue-600 cursor-pointer">Gaya Hidup Sehat</li>
+              </ul>
+            </div>
+            <div className="w-full md:w-1/3">
+              <h3 className="text-xl font-bold mb-4">Langganan</h3>
+              <p className="text-gray-600 mb-4">
+                Dapatkan artikel kesehatan terbaru langsung ke email Anda.
+              </p>
+              <div className="flex mb-4">
+                <input 
+                  type="email" 
+                  placeholder="Email Anda" 
+                  className="flex-1 p-2 border border-gray-300 rounded-l"
+                />
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700">
+                  Langganan
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-8">
+                <span 
+                  className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                  onClick={handleContactClick}
+                  style={{ textDecoration: 'none' }}
+                >
+                  Hubungi Kami
+                </span>
+                <div className="flex space-x-4">
+                  <span className="text-blue-600 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                    </svg>
+                  </span>
+                  <span className="text-blue-600 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/>
+                    </svg>
+                  </span>
+                  <span className="text-blue-600 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mt-8 pt-8 border-t border-gray-200">
+            <p className="text-gray-600">&copy; 2025 Health News. Semua hak dilindungi.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* CAPTCHA Modal */}
+      {showCaptcha && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowCaptcha(false)}></div>
+          <div className="bg-white p-6 rounded-lg shadow-xl z-10 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Verifikasi CAPTCHA</h3>
+              <button 
+                onClick={() => setShowCaptcha(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="mb-4">
+              <p className="mb-2">Masukkan kode verifikasi:</p>
+              <div className="bg-gray-100 p-3 mb-4 text-center font-mono text-xl">
+                {captchaCode}
+              </div>
+              <input
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded mb-2"
+                placeholder="Masukkan kode di atas"
+              />
+              {error && (
+                <p className="text-red-500 text-sm">{error}</p>
+              )}
+            </div>
             <button
-              onClick={() => setShowDeleteForm(true)}
-              style={{
-                background: 'linear-gradient(to right, #f43f5e, #ec4899)',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
+              onClick={verifyCaptcha}
+              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
             >
-              Hapus Pesanan
+              Verifikasi
             </button>
           </div>
         </div>
+      )}
 
-        {/* Form Modal dengan animasi yang lebih baik */}
-        {showForm && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1rem'
-              }}>
-                <h2 style={{fontSize: '1.25rem', fontWeight: 600, color: '#1f2937'}}>
-                  Silahkan isi data di bawah ini
-                </h2>
-                <button 
-                  onClick={() => setShowForm(false)}
-                  style={{color: '#6b7280', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer'}}
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <form onSubmit={handleSubmit}>
-  {/* NAMA */}
-  <div style={{ marginBottom: '1rem' }}>
-    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
-      Masukkan nama anda
-    </label>
-    <input
-      type="text"
-      name="nama"
-      value={formData.nama}
-      onChange={handleChange}
-      style={{
-        width: '100%',
-        padding: '0.5rem 0.75rem',
-        border: '1px solid #d1d5db',
-        borderRadius: '0.375rem',
-        outline: 'none'
-      }}
-      required
-    />
-  </div>
-
-  {/* KELAS */}
-  <div style={{ marginBottom: '1rem' }}>
-    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
-      Kelas
-    </label>
-    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-      <select
-        value={formData.kelas.slice(0, 1)}
-        onChange={(e) => {
-          const huruf = formData.kelas.slice(1) || '';
-          setFormData(prev => ({ ...prev, kelas: e.target.value + huruf }));
-        }}
-        style={{
-          flex: 1,
-          padding: '0.5rem 0.75rem',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          outline: 'none',
-          backgroundColor: 'white'
-        }}
-        required
-      >
-        <option value="">Kelas</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-      </select>
-
-      <select
-        value={formData.kelas.slice(1)}
-        onChange={(e) => {
-          const angka = formData.kelas.slice(0, 1) || '';
-          setFormData(prev => ({ ...prev, kelas: angka + e.target.value }));
-        }}
-        style={{
-          flex: 1,
-          padding: '0.5rem 0.75rem',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          outline: 'none',
-          backgroundColor: 'white'
-        }}
-        required
-      >
-        <option value="">Huruf</option>
-        {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(huruf => (
-          <option key={huruf} value={huruf}>{huruf}</option>
-        ))}
-      </select>
-    </div>
-
-    {formData.kelas.length === 2 && (
-      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-        Kelas anda {formData.kelas}
-      </p>
-    )}
-  </div>
-
-  {/* JUMLAH BELI */}
-  <div style={{ marginBottom: '1.5rem' }}>
-    <label style={{ display: 'block', color: '#4b5563', marginBottom: '0.5rem' }}>
-      Masukkan jumlah beli anda
-    </label>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-      <button
-        type="button"
-        onClick={decrementQuantity}
-        style={{
-          padding: '0.5rem',
-          backgroundColor: '#ede9fe',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          cursor: 'pointer'
-        }}
-      >
-        -
-      </button>
-      <input
-        type="number"
-        name="jumlah"
-        value={formData.jumlah}
-        onChange={handleChange}
-        min="1"
-        readOnly
-        style={{
-          width: '3rem',
-          textAlign: 'center',
-          padding: '0.5rem',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          backgroundColor: '#f9fafb'
-        }}
-      />
-      <button
-        type="button"
-        onClick={incrementQuantity}
-        style={{
-          padding: '0.5rem',
-          backgroundColor: '#ede9fe',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          cursor: 'pointer'
-        }}
-      >
-        +
-      </button>
-    </div>
-
-    {/* KODE RAHASIA */}
-    <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column' }}>
-      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-        <span style={{ fontWeight: 500 }}>Kode rahasia:</span> {formData.kodeRahasia}
-        <button
-          onClick={() => navigator.clipboard.writeText(formData.kodeRahasia)}
-          type="button"
-          style={{
-            marginLeft: '8px',
-            fontSize: '0.75rem',
-            padding: '2px 6px',
-            cursor: 'pointer',
-            background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px'
-          }}
-        >
-          Salin
-        </button>
-      </p>
-      <p style={{ fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic' }}>
-        *Ingatlah kode ini. Kode ini akan diminta saat anda mencoba menghapus data anda.
-      </p>
-    </div>
-  </div>
-
-  {/* TOTAL */}
-  <div style={{
-    marginBottom: '1.5rem',
-    padding: '0.75rem',
-    backgroundColor: '#f5f3ff',
-    borderRadius: '0.375rem'
-  }}>
-    <p style={{ fontWeight: 500 }}>
-      Total yang harus anda bayar =
-      <span style={{ color: '#6d28d9', fontWeight: 700 }}> Rp {(formData.jumlah * hargaSatuan).toLocaleString()}</span>
-    </p>
-  </div>
-
-  {/* SUBMIT */}
-  <button
-    type="submit"
-    style={{
-      width: '100%',
-      background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
-      color: 'white',
-      padding: '0.5rem 1rem',
-      borderRadius: '0.375rem',
-      border: 'none',
-      cursor: 'pointer',
-      fontWeight: 500
-    }}
-  >
-    Kirim
-  </button>
-</form>
-            </div>
+      {/* Secret Page */}
+      {showSecret && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-white">
+          <div className="p-8 max-w-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">Halaman Rahasia</h2>
+            <p className="text-lg mb-6">Informasi penting disimpan di sini.</p>
+            <button
+              onClick={() => setShowSecret(false)}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            >
+              Kembali
+            </button>
           </div>
-        )}
-
-        {/* Delete Form Modal */}
-        {showDeleteForm && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1rem'
-              }}>
-                <h2 style={{fontSize: '1.25rem', fontWeight: 600, color: '#1f2937'}}>
-                  Hapus Pesanan
-                </h2>
-                <button 
-                  onClick={() => {
-                    setShowDeleteForm(false);
-                    setDeleteCode('');
-                    setDeleteError('');
-                  }}
-                  style={{color: '#6b7280', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer'}}
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div>
-                <div style={{marginBottom: '1rem'}}>
-                  <label style={{display: 'block', color: '#4b5563', marginBottom: '0.5rem'}}>
-                    Masukkan kode rahasia pesanan
-                  </label>
-                  <input
-                    type="text"
-                    value={deleteCode}
-                    onChange={(e) => setDeleteCode(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-                
-                {deleteError && (
-                  <div style={{
-                    marginBottom: '1rem',
-                    padding: '0.5rem',
-                    backgroundColor: '#fee2e2',
-                    color: '#b91c1c',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem'
-                  }}>
-                    {deleteError}
-                  </div>
-                )}
-                
-                <button
-                  onClick={handleDeleteOrder}
-                  style={{
-                    width: '100%',
-                    background: 'linear-gradient(to right, #ef4444, #dc2626)',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 500
-                  }}
-                >
-                  Hapus Pesanan
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Confirmation Modal dengan animasi bounce */}
-        {showConfirmation && (
-          <div className="modal-overlay">
-            <div className="modal-content confirmation-modal">
-              <div style={{textAlign: 'center'}}>
-                <div style={{
-                  width: '4rem', 
-                  height: '4rem', 
-                  backgroundColor: '#d1fae5',
-                  borderRadius: '9999px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1rem auto'
-                }}>
-                  <svg style={{width: '2rem', height: '2rem', color: '#10b981'}} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-                
-                <h2 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  color: '#1f2937',
-                  marginBottom: '1rem'
-                }}>
-                  Data anda telah di kirim!!!
-                </h2>
-                
-                <button
-                  onClick={closeConfirmation}
-                  style={{
-                    background: 'linear-gradient(to right, #7c3aed, #4f46e5)',
-                    color: 'white',
-                    padding: '0.5rem 1.5rem',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 500
-                  }}
-                >
-                  Keluar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Data yang terdaftar dari Firebase */}
-        {showData && (
-          <div style={{
-            marginTop: '2rem',
-            backgroundColor: 'white',
-            padding: '1.5rem',
-            borderRadius: '0.5rem',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            animation: 'fadeIn 0.5s ease-out'
-          }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#1f2937',
-              marginBottom: '1rem'
-            }}>
-              Data yang terdaftar saat ini:
-            </h2>
-            
-            {loading ? (
-              <p style={{textAlign: 'center', padding: '1rem'}}>Memuat data...</p>
-            ) : allData.length > 0 ? (
-              allData.map((data, index) => (
-                <div key={index} style={{
-                  marginBottom: '1rem',
-                  padding: '1rem',
-                  border: '1px solid #ede9fe',
-                  borderRadius: '0.375rem',
-                  backgroundColor: '#f5f3ff'
-                }}>
-                  <p><span style={{fontWeight: 500}}>Nama:</span> {data.nama}</p>
-                  <p><span style={{fontWeight: 500}}>Kelas:</span> {data.kelas}</p>
-                  <p><span style={{fontWeight: 500}}>Jumlah:</span> {data.jumlah}</p>
-                  <p><span style={{fontWeight: 500}}>Total:</span> Rp {data.total.toLocaleString()}</p>
-                  <p><span style={{fontWeight: 500}}>Waktu:</span> {data.waktu}</p>
-                </div>
-              ))
-            ) : (
-              <p style={{color: '#6b7280', fontStyle: 'italic'}}>
-                Belum ada data yang terdaftar.
-              </p>
-            )}
-            
-            {/* Tombol Hubungi Admin */}
-            <div style={{
-              marginTop: '1.5rem',
-              textAlign: 'center'
-            }}>
-              <a 
-                href="https://wa.me/+6285257420996" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  background: '#25D366',
-                  color: 'white',
-                  textDecoration: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.375rem',
-                  fontWeight: 500
-                }}
-              >
-                <svg style={{width: '1.25rem', height: '1.25rem'}} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                Hubungi Admin lewat WA
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-}
-
-export default App;
+      }
